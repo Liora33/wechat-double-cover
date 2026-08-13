@@ -1,53 +1,53 @@
 # wechat-double-cover
 
-一个专门用于制作 **微信公众号“双拼封面图”** 的可复用 Skill。
+A reusable skill for creating **WeChat Official Account dual-purpose cover images** that work correctly in both major crop contexts:
 
-它解决的不是“做一张横图”这么简单，而是微信公众号同一张封面在不同场景里会被截成两种完全不同的画幅：
+- Message list: wide cover
+- Share card / Official Account profile: square cover
 
-- 消息列表：宽图
-- 转发卡片 / 公众号主页：方图
+This project does not treat the cover as a generic panoramic banner. Instead, it uses verified crop geometry, requires both regions to be composed independently, and then merges them precisely into one master image.
 
-因此本 Skill 使用已经验证过的真实裁切逻辑，要求左右两个区域分别构图，再精确拼接。
+## Core dimensions
 
-## 核心尺寸
-
-| 用途 | 尺寸 | 位置 |
+| Use case | Size | Position |
 |---|---:|---|
-| 最终成品 | **1252×374 px** | — |
-| 左侧消息列表封面 | **879×374 px** | x=0 起 |
-| 右侧方形封面 | **374×374 px** | x≈878 起 |
+| Final master image | **1252×374 px** | — |
+| Left message-list cover | **879×374 px** | starts at x=0 |
+| Right square cover | **374×374 px** | starts at x≈878 |
 
-> 注意：左右区域在 `x=878` 共享 1 px，这是为了让总宽严格保持 1252 px。
+> Note: the left and right regions intentionally share 1 px at `x=878` so the final canvas remains exactly 1252 px wide.
 
-## 为什么不能直接做 3:1 / 16:9
+## Why not just use 3:1 or 16:9?
 
-因为那样只是“看起来像双拼”，并不对应微信真实裁切框。常见后果包括：
+Because those ratios only look similar to a WeChat dual cover. They do not match the actual crop geometry.
 
-- 左侧多出不该出现的画面
-- 右侧小图内容不够
-- 人物、手指、主体被截断
-- 分割线位置错误
-- 右侧文字太小
-- 微信后台二次裁切后完全变样
+Typical failures include:
 
-## 正确工作流
+- extra visual content leaking into the left crop
+- insufficient content in the right square crop
+- cropped people, hands, fingers, buildings, or key subjects
+- an incorrect seam or divider position
+- typography that becomes too small on the right
+- a cover that changes dramatically after WeChat applies its own crop
 
-1. 单独设计左侧 879×374。
-2. 单独设计右侧 374×374。
-3. 右侧从 x=878 放入最终画布。
-4. 合成为 1252×374。
-5. 再分别模拟导出 879×374 与 374×374 两个真实裁切预览。
-6. 两个预览都通过后，才算最终成品。
+## Correct workflow
 
-## 默认规则
+1. Design the left region independently at **879×374 px**.
+2. Design the right region independently at **374×374 px**.
+3. Place the right region starting at **x=878**.
+4. Merge both into a **1252×374 px** master image.
+5. Simulate the two real WeChat crops.
+6. Deliver only after both crop previews pass visual inspection.
 
-- 默认 **不放任何 Logo**，除非用户明确要求。
-- 不得私自增加、删减或改写用户文字。
-- 右侧方图文字必须针对 1:1 单独放大设计。
-- 用户原素材不得拉伸、扭曲、硬裁掉关键主体。
-- 不允许为了“视觉统一”牺牲两个实际裁切后的完整性。
+## Default rules
 
-## 仓库结构
+- Do **not** add a logo unless the user explicitly requests one.
+- Do not add, remove, rewrite, or paraphrase user-provided copy without permission.
+- Right-side typography must be designed specifically for the 1:1 crop and remain large enough to read immediately.
+- Do not stretch, distort, or aggressively crop user-provided source images.
+- Do not sacrifice the usability of either real crop just to make the full-width master look more unified.
+
+## Repository structure
 
 ```text
 wechat-double-cover/
@@ -60,35 +60,49 @@ wechat-double-cover/
    └─ README.md
 ```
 
-## 校验脚本
+## Validation script
 
-安装 Pillow：
+Install Pillow:
 
 ```bash
 pip install pillow
 ```
 
-检查最终图片：
+Validate a finished cover:
 
 ```bash
 python scripts/validate_cover.py path/to/cover.png
 ```
 
-同时导出微信两个真实裁切预览：
+Validate and export both crop previews:
 
 ```bash
 python scripts/validate_cover.py path/to/cover.png --export-previews
 ```
 
-脚本会检查：
+The script checks:
 
-- 最终尺寸是否严格为 1252×374
-- 左侧裁切是否为 879×374
-- 右侧裁切是否为 374×374
-- 并输出两个独立预览方便人工自检
+- whether the master image is exactly **1252×374 px**
+- whether the left crop is exactly **879×374 px**
+- whether the right crop is exactly **374×374 px**
+- whether the right crop begins at **x=878**
+- and can export both previews for manual review
 
-## 版本
+## Skill usage
 
-当前规范：**v2.0.0**
+The full production rules live in [`SKILL.md`](./SKILL.md).
 
-这一版覆盖此前使用近似比例、直接生成超宽图再硬裁的旧方法。
+Typical trigger phrases include:
+
+- `WeChat double cover`
+- `WeChat Official Account dual cover`
+- `公众号双拼封面图`
+- `微信公众号双封面`
+
+Chinese trigger phrases are intentionally kept for compatibility with real-world Chinese-language workflows; the public repository documentation itself is written in English.
+
+## Version
+
+Current specification: **v2.0.0**
+
+This version supersedes older workflows that relied on approximate aspect ratios or generated a generic ultra-wide image before hard-cropping it.
