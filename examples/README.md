@@ -1,17 +1,17 @@
 # Examples
 
-建议每个实际项目保留三张图用于验收：
+For each completed project, keep three images for validation:
 
 ```text
-wechat-double-cover.png   # 1252×374 最终成品
-left-preview.png          # 879×374 消息列表预览
-right-preview.png         # 374×374 转发卡片 / 公众号主页预览
+wechat-double-cover.png   # 1252×374 final master image
+left-preview.png          # 879×374 message-list preview
+right-preview.png         # 374×374 share/profile preview
 ```
 
-生成预览：
+Generate the previews with:
 
 ```bash
 python ../scripts/validate_cover.py wechat-double-cover.png --export-previews
 ```
 
-人工验收时，请分别看两个 preview，不要只看总图。
+During manual review, inspect both preview images independently. Do not approve a cover based only on how the full 1252×374 master image looks.
